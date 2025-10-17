@@ -19,8 +19,8 @@ streamlit run demo/HelloNovo.py
 Demo pages:
 - [demo/HelloNovo.py](demo/HelloNovo.py)
 - [demo/pages/01_医生对话.py](demo/pages/01_医生对话.py)
-- [demo/pages/02 对话评价.py](demo/pages/02 对话评价.py)
-- [demo/pages/03 快问快答.py](demo/pages/03 快问快答.py)
+- [demo/pages/02_对话评价.py](demo/pages/02_对话评价.py)
+- [demo/pages/03_快问快答.py](demo/pages/03_快问快答.py)
 
 3. Try example notebooks:
 - [notebooks/SDKtest.ipynb](notebooks/SDKtest.ipynb)
