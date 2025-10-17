@@ -63,7 +63,7 @@ Core modules and main functions (quick reference)
   - Class: [`Quiz`](src/quick_quiz.py)
     - [`Quiz.get_question`](src/quick_quiz.py)
     - [`Quiz.evaluate_question`](src/quick_quiz.py) / [`Quiz.evaluate`](src/quick_quiz.py)
-  - Demo page: [demo/pages/03 快问快答.py](demo/pages/03 快问快答.py)
+  - Demo page: [demo/pages/03_快问快答.py](demo/pages/03_快问快答.py)
   - SDK usage: [sdk/module_4.py](sdk/module_4.py)
 
 - Static dataclasses & I/O
