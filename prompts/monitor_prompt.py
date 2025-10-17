@@ -7,93 +7,93 @@ clarify_process_schema = {
         "stage_type": {
             "type": "string",
             "enum": [
-                "澄清异议",
-                "解决异议",
-                "无关输入"
+                "Clarify Objection",
+                "Resolve Objection",
+                "Irrelevant Input"
             ],
-            "description": "阶段判断"
+            "description": "Stage classification"
         },
         "process_type": {
             "type": "string",
             "enum": [
-                "询问指向",
-                "询问来源",
-                "询问治疗理念",
-                "询问治疗经验",
-                "无关询问"
+                "Ask About Focus",
+                "Ask Source",
+                "Ask Treatment Philosophy",
+                "Ask Treatment Experience",
+                "Irrelevant Inquiry"
             ],
-            "description": "询问的动机类型"
+            "description": "Motivation type of the inquiry"
         },
         "is_confirmation": {
             "type": "string",
             "enum": [
-                    "是",
-                    "否"
-                ],
-            "description": "语义是否完全一致"
+                "Yes",
+                "No"
+            ],
+            "description": "Whether the semantics are exactly the same"
         }
     },
     "required": ["stage_type", "process_type", "is_confirmation"]
 }
 
 clarify_process_prompt = PromptTemplate.from_template('''
-<背景>
-你是一位医药代表销售话术培训师，你正在培训{product}的销售代表
-1. 你擅长判断医药代表是在向医生澄清问题，还是向医生传达产品信息
-2. 你擅长判断医药代表是否正在向医生确认其对{product}产品的异议
-3. 你擅长识别医药代表询问的动机类型，动机类型包括："询问指向","询问来源","询问治疗理念","询问治疗经验"
-</背景>
+<Background>
+You are a sales conversation trainer for medical representatives, training sales reps for {product}.
+1. You are good at judging whether the rep is clarifying questions with the doctor or conveying product information.
+2. You are good at judging whether the rep is confirming the doctor’s objection to {product}.
+3. You are good at identifying the motivation type of the rep’s inquiry: "Ask About Focus", "Ask Source", "Ask Treatment Philosophy", "Ask Treatment Experience".
+</Background>
 -----------------------------
 
-<对话上下文>
+<Dialogue Context>
 {chat_history}
-</对话上下文>
+</Dialogue Context>
 
-<询问内容>
+<Inquiry>
 {input}
-</询问内容>
+</Inquiry>
 -----------------------------
 
-<你的任务>
-1. 请判断”{input}“这句话，是在向医生询问/澄清问题(即”澄清异议“)，还是向医生传达产品信息(即”解决异议“)，请用”澄清异议“或”解决异议“回答
-- ”澄清异议”是通过询问问题来明确医生异议的具体情况，”澄清异议”的典型例子包括：
-    example 1: 心血管获益和给药方式，您更为关注哪一个？
-    example 2: 您关注的心血管获益具体是指哪方面？
-    example 3: 这些患者如果是合并T2DM，您最希望看到的是哪方面的变化？
-    example 4: 如果是有心血管代谢危险因素的患者，您会如何选择这两个产品？
-    example 5: 这两个产品的干预时机您觉得是否相同？
-    example 6: 这种情况多吗？
-    example 7: 一般什么样的患者容易出现难以坚持这种情况？
-    example 8: 您遇到这种情况的时候，通常会怎么处理呢？
-    example 9: 什么样的患者，您会尤其关注心血管终点事件的发生？
-    example 10: 他们在使用诺和泰的时候，有了解这种药物可能会出现的胃肠道副反应特点，以及在饮食上需要注意什么吗？
-- ”解决异议”是单方面向医生传达产品信息，或者指导医生使用{product}产品，“解决异议”的典型例子包括：
-    example 1: GLP-1RA与SGLT-2i的CVOT荟萃分析结果显示，GLP-1RA对ASCVD终末事件心梗和卒中都有降低风险的作用，提示GLP-1RA具有改善动脉粥样的作用；而SGLT-2i不能降低卒中风险，主要降低了患者的心衰发生风险。
-    example 2: 因此，2019 ESC/EASD等心血管权威指南指出，GLP-1RA的心血管获益主要来自于动脉粥样硬化相关事件的减少；SGLT-2抑制剂的心血管获益主要来自于心衰相关事件的减少。
-    example 3: 诺和泰虽然是注射给药，但装置本身的操作是非常简便的，匹配的针头也比抽血的针头细多了，大部分使用过的患者都说几乎无痛感。因此，患者完全可以自行注射，长期使用，帮助他们长期获益。
-    example 4: 老师您在临床上遇到合并冠心病或者是合并心血管代谢危险因素的T2DM，完全可以推荐他们尽早使用诺和泰治疗，帮助他们改善心血管代谢，实现心血管获益。
-    example 5: 诺和泰的胃肠道副反应通常是一过性的，说明书也有明确的说明：诺和泰®常见的胃肠系统不良反应严重程度为轻度或中度且持续时间较短。
-    example 6: 另外，也需要告知他们在初期尽量清淡饮食，少吃多餐，就可以出现副反应。
-    example 7: 您处理的方式特别好，可以用剂量滴定方式改善患者胃肠道耐受性
-    example 8: 随着症状严重程度和发生频率随治疗时间延长而减轻后，让患者尽量避免停药耽误疾病治疗进程，就可以达到理想的治疗效果。
-    example 9: 您也可以请他们入组诺和关怀，上面会有相关的介绍，可以为患者提供相应的帮助，也减轻您的沟通成本，您看可以吗？
-    example 10: 您是认可诺的泰带给患者的心血管获益的，如果在使用上帮助患者更好的了解这个产品，配合治疗，相信会有更多的患者获益，老师您可以在未来遇到合并冠心病或者有心血管代谢危险风险的患者继续放心使用司美格鲁肽治疗
-- 如果既不是”澄清异议“，也不是”解决异议“，则回答”无关输入“，例如与{product}完全无关的内容
+<Your Task>
+1. Determine whether “{input}” is asking/clarifying with the doctor (i.e., “Clarify Objection”), or conveying product information to the doctor (i.e., “Resolve Objection”). Answer with “Clarify Objection” or “Resolve Objection”.
+- “Clarify Objection” clarifies specifics of the doctor’s objection through questions. Typical examples:
+    example 1: Between cardiovascular benefit and mode of administration, which do you care more about?
+    example 2: Which specific aspect of cardiovascular benefit are you referring to?
+    example 3: For patients combined with T2DM, which changes do you most hope to see?
+    example 4: For patients with cardiometabolic risk factors, how would you choose between these two products?
+    example 5: Do you think the intervention timing for these two products is the same?
+    example 6: Is this situation common?
+    example 7: What kind of patients usually find it hard to persist?
+    example 8: When you encounter this situation, how do you usually handle it?
+    example 9: For which patients do you pay particular attention to the occurrence of cardiovascular endpoints?
+    example 10: When they use {product}, do they understand the possible GI side effects and related dietary precautions?
+- “Resolve Objection” is one-way delivery of product information or guidance on using {product}. Typical examples:
+    example 1: Meta-analyses of GLP-1RA vs SGLT-2i CVOTs show GLP-1RA reduces risks of MI and stroke (ASCVD endpoints), suggesting an anti-atherosclerotic effect; SGLT-2i do not reduce stroke risk, mainly lowering heart failure events.
+    example 2: Thus, the 2019 ESC/EASD cardiovascular guidelines indicate GLP-1RA benefits mainly come from reductions in atherosclerosis-related events, while SGLT-2i benefits mainly come from reductions in heart failure–related events.
+    example 3: Although {product} is injectable, the device is very easy to use, and the needle is thinner than a phlebotomy needle. Most patients report almost no pain, so they can self-inject long term to sustain benefit.
+    example 4: For T2DM with coronary disease or cardiometabolic risk factors, you can recommend early use of {product} to improve cardiometabolic health and achieve CV benefit.
+    example 5: The GI adverse reactions of {product} are usually transient; the label states they are generally mild to moderate and short in duration.
+    example 6: Also advise light meals and small, frequent meals early on to mitigate side effects.
+    example 7: Your approach is excellent—dose titration can improve GI tolerability.
+    example 8: As symptoms decrease in severity and frequency over time, encourage patients to avoid stopping therapy to prevent delaying disease management and achieve optimal outcomes.
+    example 9: You can enroll patients in the {product}-care program for related resources, which can help patients and reduce your communication burden—does that work for you?
+    example 10: Since you recognize the CV benefit of {product}, helping patients better understand and adhere will benefit more patients; you can continue to confidently use semaglutide therapy for those with CAD or cardiometabolic risk.
+- If it is neither “Clarify Objection” nor “Resolve Objection,” answer “Irrelevant Input,” e.g., content entirely unrelated to {product}.
     
-2. 请根据定义，识别并匹配与”{input}“这句话最匹配的动机类型，根据以下指导原则进行：
-- 注意，动机类型请从["询问指向","询问来源","询问治疗理念","询问治疗经验"]中选择最接近的一个
-- 四个动机类型的定义如下：{definition}
-- 四个传达信息类型各有一些例子：{few_shots_examples}
-- 如果四个动机类型都不符合，则请输出"无关询问"
-- 如果你不能明确的判断询问的意思，请归类到"无关询问"，例如："process_type"，乱码等
+2. Identify the motivation type that best matches “{input}” based on the definitions:
+- Choose the closest from ["Ask About Focus","Ask Source","Ask Treatment Philosophy","Ask Treatment Experience"].
+- Definitions: {definition}
+- Example sets: {few_shots_examples}
+- If none fit, output "Irrelevant Inquiry".
+- If you cannot clearly determine the meaning of the inquiry, classify it as "Irrelevant Inquiry" (e.g., “process_type”, gibberish, etc.).
 - let's think step by step
 - do not make up an answer
 
-3. 判断询问”{input}“这句话，是否问到了/表达了严格与“你{real_objection}”完全一样的语义，请用是或否回答
-</你的任务>
+3. Determine whether “{input}” asks/expresses semantics strictly identical to “your {real_objection}”. Answer “Yes” or “No”.
+</Your Task>
 -----------------------------
 
-<询问内容>
+<Inquiry>
 {input}
 ''')
 
@@ -103,94 +103,94 @@ take_action_process_schema = {
         "stage_type": {
             "type": "string",
             "enum": [
-                "澄清异议",
-                "解决异议",
-                "无关输入"
+                "Clarify Objection",
+                "Resolve Objection",
+                "Irrelevant Input"
             ],
-            "description": "阶段判断"
+            "description": "Stage classification"
         },
         "process_type": {
             "type": "string",
             "enum": [
-                "提供证据",
-                "传达FB",
-                "传达整体优势及利益",
-                "传达专家建议和经验案例",
-                "无法判断"
+                "Provide Evidence",
+                "Deliver FB",
+                "Convey Overall Advantages and Benefits",
+                "Convey Expert Advice and Case Experience",
+                "Unable to Determine"
             ],
-            "description": "代表传达的内容类型"
+            "description": "Type of content conveyed by the representative"
         },
         "is_in_standard_answer": {
             "type": "string",
             "enum": [
-                "是",
-                "否"
+                "Yes",
+                "No"
             ],
-            "description": "代表传达的内容是否在标准答案中"
+            "description": "Whether the conveyed content appears in the standard answers"
         }
     },
     "required": ["stage_type", "process_type", "is_in_standard_answer"]
 }
 
 take_action_process_prompt = PromptTemplate.from_template('''
-<背景>
-你是一位医药代表销售话术培训师，你正在培训{product}的销售代表
-1. 你擅长判断医药代表是在向医生澄清问题，还是向医生传达产品信息
-2. 你擅长识别医药代表传达产品信息的类型，传达信息类型包括："提供证据","传达FB","传达整体优势及利益","传达专家建议和经验案例"
-</背景>
+<Background>
+You are a sales conversation trainer for medical representatives, training sales reps for {product}.
+1. You are good at judging whether the rep is clarifying questions with the doctor or conveying product information.
+2. You are good at identifying the type of information conveyed: "Provide Evidence", "Deliver FB", "Convey Overall Advantages and Benefits", "Convey Expert Advice and Case Experience".
+</Background>
 -----------------------------
 
-<对话上下文>
+<Dialogue Context>
 {chat_history}
-</对话上下文>
+</Dialogue Context>
 
-<输入内容>
+<Input>
 {input}
-</输入内容>
+</Input>
 -----------------------------
 
-<你的任务>
-1. 请判断”{input}“这句话，是在向医生询问/澄清问题(即”澄清异议“)，还是向医生传达产品信息(即”解决异议“)，请用”澄清异议“或”解决异议“回答
-- ”澄清异议”是通过询问问题来明确医生异议的具体情况，”澄清异议”的典型例子包括：
-    example 1: 心血管获益和给药方式，您更为关注哪一个？
-    example 2: 您关注的心血管获益具体是指哪方面？
-    example 3: 这些患者如果是合并T2DM，您最希望看到的是哪方面的变化？
-    example 4: 如果是有心血管代谢危险因素的患者，您会如何选择这两个产品？
-    example 5: 这两个产品的干预时机您觉得是否相同？
-    example 6: 这种情况多吗？
-    example 7: 一般什么样的患者容易出现难以坚持这种情况？
-    example 8: 您遇到这种情况的时候，通常会怎么处理呢？
-    example 9: 什么样的患者，您会尤其关注心血管终点事件的发生？
-    example 10: 他们在使用诺和泰的时候，有了解这种药物可能会出现的胃肠道副反应特点，以及在饮食上需要注意什么吗？
-- ”解决异议”是单方面向医生传达产品信息，或者指导医生使用{product}产品，“解决异议”的典型例子包括：
-    example 1: GLP-1RA与SGLT-2i的CVOT荟萃分析结果显示，GLP-1RA对ASCVD终末事件心梗和卒中都有降低风险的作用，提示GLP-1RA具有改善动脉粥样的作用；而SGLT-2i不能降低卒中风险，主要降低了患者的心衰发生风险。
-    example 2: 因此，2019 ESC/EASD等心血管权威指南指出，GLP-1RA的心血管获益主要来自于动脉粥样硬化相关事件的减少；SGLT-2抑制剂的心血管获益主要来自于心衰相关事件的减少。
-    example 3: 诺和泰虽然是注射给药，但装置本身的操作是非常简便的，匹配的针头也比抽血的针头细多了，大部分使用过的患者都说几乎无痛感。因此，患者完全可以自行注射，长期使用，帮助他们长期获益。
-    example 4: 老师您在临床上遇到合并冠心病或者是合并心血管代谢危险因素的T2DM，完全可以推荐他们尽早使用诺和泰治疗，帮助他们改善心血管代谢，实现心血管获益。
-    example 5: 诺和泰的胃肠道副反应通常是一过性的，说明书也有明确的说明：诺和泰®常见的胃肠系统不良反应严重程度为轻度或中度且持续时间较短。
-    example 6: 另外，也需要告知他们在初期尽量清淡饮食，少吃多餐，就可以出现副反应。
-    example 7: 您处理的方式特别好，可以用剂量滴定方式改善患者胃肠道耐受性
-    example 8: 随着症状严重程度和发生频率随治疗时间延长而减轻后，让患者尽量避免停药耽误疾病治疗进程，就可以达到理想的治疗效果。
-    example 9: 您也可以请他们入组诺和关怀，上面会有相关的介绍，可以为患者提供相应的帮助，也减轻您的沟通成本，您看可以吗？
-    example 10: 您是认可诺的泰带给患者的心血管获益的，如果在使用上帮助患者更好的了解这个产品，配合治疗，相信会有更多的患者获益，老师您可以在未来遇到合并冠心病或者有心血管代谢危险风险的患者继续放心使用司美格鲁肽治疗
-- 如果既不是”澄清异议“，也不是”解决异议“，则回答”无关输入“，例如与{product}完全无关的内容
+<Your Task>
+1. Determine whether “{input}” is asking/clarifying with the doctor (i.e., “Clarify Objection”), or conveying product information (i.e., “Resolve Objection”). Answer with “Clarify Objection” or “Resolve Objection”.
+- “Clarify Objection” clarifies specifics of the doctor’s objection through questions. Typical examples:
+    example 1: Between cardiovascular benefit and mode of administration, which do you care more about?
+    example 2: Which specific aspect of cardiovascular benefit are you referring to?
+    example 3: For patients combined with T2DM, which changes do you most hope to see?
+    example 4: For patients with cardiometabolic risk factors, how would you choose between these two products?
+    example 5: Do you think the intervention timing for these two products is the same?
+    example 6: Is this situation common?
+    example 7: What kind of patients usually find it hard to persist?
+    example 8: When you encounter this situation, how do you usually handle it?
+    example 9: For which patients do you pay particular attention to the occurrence of cardiovascular endpoints?
+    example 10: When they use {product}, do they understand the possible GI side effects and related dietary precautions?
+- “Resolve Objection” is one-way delivery of product information or guidance on using {product}. Typical examples:
+    example 1: Meta-analyses of GLP-1RA vs SGLT-2i CVOTs show GLP-1RA reduces risks of MI and stroke (ASCVD endpoints), suggesting an anti-atherosclerotic effect; SGLT-2i do not reduce stroke risk, mainly lowering heart failure events.
+    example 2: Thus, the 2019 ESC/EASD cardiovascular guidelines indicate GLP-1RA benefits mainly come from reductions in atherosclerosis-related events, while SGLT-2i benefits mainly come from reductions in heart failure–related events.
+    example 3: Although {product} is injectable, the device is very easy to use, and the needle is thinner than a phlebotomy needle. Most patients report almost no pain, so they can self-inject long term to sustain benefit.
+    example 4: For T2DM with coronary disease or cardiometabolic risk factors, you can recommend early use of {product} to improve cardiometabolic health and achieve CV benefit.
+    example 5: The GI adverse reactions of {product} are usually transient; the label states they are generally mild to moderate and short in duration.
+    example 6: Also advise light meals and small, frequent meals early on to mitigate side effects.
+    example 7: Your approach is excellent—dose titration can improve GI tolerability.
+    example 8: As symptoms decrease in severity and frequency over time, encourage patients to avoid stopping therapy to prevent delaying disease management and achieve optimal outcomes.
+    example 9: You can enroll patients in the {product}-care program for related resources, which can help patients and reduce your communication burden—does that work for you?
+    example 10: Since you recognize the CV benefit of {product}, helping patients better understand and adhere will benefit more patients; you can continue to confidently use semaglutide therapy for those with CAD or cardiometabolic risk.
+- If it is neither “Clarify Objection” nor “Resolve Objection,” answer “Irrelevant Input,” e.g., content entirely unrelated to {product}.
 
-2. 请根据定义，识别并匹配与”{input}“这句话最匹配的动机类型，根据以下指导原则进行：
-- 注意，动机类型请从["询问指向","询问来源","询问治疗理念","询问治疗经验"]中选择最接近的一个
-- 四个传达信息类型的定义如下：{definition}
-- 四个传达信息类型各有一些例子：{few_shots_examples}
-- 如果四个传达信息类型都不符合，则请输出"无关询问"
-- 如果你不能明确的判断询问的意思，请归类到"无关询问"，例如："process_type"，乱码等
+2. Identify the motivation type that best matches “{input}” based on the definitions:
+- Choose the closest from ["Ask About Focus","Ask Source","Ask Treatment Philosophy","Ask Treatment Experience"].
+- Definitions: {definition}
+- Example sets: {few_shots_examples}
+- If none fit, output "Irrelevant Inquiry".
+- If you cannot clearly determine the meaning, classify it as "Irrelevant Inquiry" (e.g., “process_type”, gibberish, etc.).
 - let's think step by step
 - do not make up an answer
 
-3. 请你根据语义和具体的指标数字等细节，判断”{input}“这句话是否包含了跟标准答案中的任意一条，表达了与之完全相同的意思。
-- 请用”是“或”否“回答，不用输出你的推理过程
-- 标准答案为：{standard_answer}
-</你的任务>
+3. Using semantics and specific metric numbers/details, determine whether “{input}” conveys exactly the same meaning as any item in the standard answers.
+- Answer “Yes” or “No” only; do not output your reasoning.
+- Standard answers: {standard_answer}
+</Your Task>
 -----------------------------
 
-<输入内容>
+<Input>
 {input}
 ''')
 
@@ -199,19 +199,19 @@ clarify_skills_schema = {
     "properties": {
         "从关心患者/医生角度出发来设计提问的得分": {
             "type": "number",
-            "description": "从关心患者/医生角度出发来设计提问的得分",
+            "description": "Score for designing questions from the perspective of caring about patients/doctors",
         },
         "提问有逻辑性的得分": {
             "type": "number",
-            "description": "提问有逻辑性的得分",
+            "description": "Score for logical questioning",
         },
         "询问客户关心的并聚焦的异议相关问题的得分": {
             "type": "number",
-            "description": "询问客户关心的并聚焦的异议相关问题的得分",
+            "description": "Score for asking objection-related questions that the customer cares about and are focused",
         },
         "澄清和追问细节的得分": {
             "type": "number",
-            "description": "澄清和追问细节的得分",
+            "description": "Score for clarifying and probing into details",
         },
     },
     "required": [
@@ -223,29 +223,29 @@ clarify_skills_schema = {
 }
 
 clarify_skills_prompt = PromptTemplate.from_template('''
-<背景>
-你是一家国际制药大厂的医药代表销售话术培训师，目前在培训关于{product}产品异议处理的"澄清部分(Clarify)"
-</背景>
+<Background>
+You are a sales training coach for medical representatives at a global pharmaceutical company. You are currently training the “Clarify” part of objection handling for product {product}.
+</Background>
 -----------------------------
 
-<名词解释>
-“异议”：指的是医生对于药品{product}的某种认知
-“预设异议”：是在对话开始前，医生对药品{product}的最初/浅层认知。在本例中，预设异议为{preset_objection}
-“真实异议”：是随着对话的进行，所揭示出来的医生对药品{product}的底层用药习惯或认知。是医生关于{product}真正的异议。在本例中，真实异议为{real_objection}
-“异议处理的澄清部分”：指的是医药代表通过与医生的多轮对话、问答，逐步揭示并确认医生的真实异议的过程
-</名词解释>
+<Terminology>
+“Objection”: The doctor’s perception regarding the drug {product}.
+“Preset objection”: The doctor’s initial/superficial perception of {product} before the conversation begins. In this case: {preset_objection}.
+“Real objection”: The underlying prescribing habits or perceptions revealed during the conversation—i.e., the true objection to {product}. In this case: {real_objection}.
+“The Clarify part of objection handling”: The process by which the rep, through multiple rounds of Q&A, gradually reveals and confirms the doctor’s real objection.
+</Terminology>
 -----------------------------
 
-<评价维度>
+<Evaluation Dimensions>
 {definition}
-</评价维度>
+</Evaluation Dimensions>
 
-<你的任务>
-请你从以上定义的维度，评价医药代表“澄清部分(Clarify)”的技巧
-- 请你为医药代表在1-5分之间打上最合适的分数（5分最优，1分最差）
+<Your Task>
+Evaluate the rep’s “Clarify” skills across the above dimensions.
+- Give the most appropriate score between 1–5 (5 = best, 1 = worst)
 - let's think step by step
 - do not make up an answer
-</你的任务>
+</Your Task>
 -----------------------------
 
 <examples>
@@ -253,11 +253,11 @@ clarify_skills_prompt = PromptTemplate.from_template('''
 </examples>
 -----------------------------
 
-<历史聊天记录>
+<Chat History>
 {chat_history}
-</历史聊天记录>
+</Chat History>
 
-<请为以下这句话的技巧评分>
+<Please score the following sentence’s skill level>
 {input}
 ''')
 
@@ -266,15 +266,15 @@ take_action_skills_schema = {
     "properties": {
         "围绕关键信息传递FB的得分": {
             "type": "number",
-            "description": "围绕关键信息传递FB的得分",
+            "description": "Score for delivering FB centered on key information",
         },
         "逻辑清晰的得分": {
             "type": "number",
-            "description": "逻辑清晰的得分",
+            "description": "Score for clarity of logic",
         },
         "语言表达清晰流畅的得分": {
             "type": "number",
-            "description": "语言表达清晰流畅的得分",
+            "description": "Score for clarity and fluency of expression",
         }
     },
     "required": [
@@ -285,25 +285,25 @@ take_action_skills_schema = {
 }
 
 take_action_skills_prompt = PromptTemplate.from_template('''
-<背景>
-你是一家国际制药大厂的医药代表销售话术培训师，目前在培训关于{product}产品异议处理的"解决部分(Take Action)"
-</背景>
+<Background>
+You are a sales training coach for medical representatives at a global pharmaceutical company. You are currently training the “Take Action” part of objection handling for product {product}.
+</Background>
 
-<名词解释>
-“真实异议”：即确认后的异议，是医生关于药品{product}的某种认知。在本例中，真实异议为{real_objection}
-</名词解释>
+<Terminology>
+“Real objection”: The confirmed objection—the doctor’s perception regarding {product}. In this case: {real_objection}.
+</Terminology>
 -----------------------------
 
-<评价维度>
+<Evaluation Dimensions>
 {definition}
-</评价维度>
+</Evaluation Dimensions>
 
-<你的任务>
-请你从以上定义的维度，评价医药代表“解决部分(Clarify)”的技巧
-- 请你为医药代表在1-5分之间打上最合适的分数（5分最优，1分最差）
+<Your Task>
+Evaluate the rep’s “Take Action (Clarify)” skills across the above dimensions.
+- Give the most appropriate score between 1–5 (5 = best, 1 = worst)
 - let's think step by step
 - do not make up an answer
-</你的任务>
+</Your Task>
 -----------------------------
 
 <examples>
@@ -311,10 +311,10 @@ take_action_skills_prompt = PromptTemplate.from_template('''
 </examples>
 -----------------------------
 
-<历史聊天记录>
+<Chat History>
 {chat_history}
-</历史聊天记录>
+</Chat History>
 
-<请为以下这句话的技巧评分>
+<Please score the following sentence’s skill level>
 {input}
 ''')

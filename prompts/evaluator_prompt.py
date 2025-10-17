@@ -6,107 +6,108 @@ skill_schema = {
     "properties": {
         "reasons": {
             "type": "string",
-            "description": "理由/判断依据"
+            "description": "Reason / judgment basis"
         },
         "evidence": {
             "type": "string",
-            "description": "支持理由/判断依据的“提问-回答”的原文Pair，仅需要输出原文即可",
+            "description": "The original Q&A pair that supports the reason/judgment. Only output the original text.",
         },
         "score": {
             "type": "string",
-            "description": "5分制得分"
+            "description": "Score on a 5-point scale"
         }
     },
     "required": ["reasons", "evidence", "score"]
 }
 
 clarify_skill_prompt = PromptTemplate.from_template('''
-<背景>
-你是一家国际制药大厂的医药代表销售话术培训师，目前在培训关于{product}产品异议处理的"澄清部分(Clarify)"
-</背景>
+<Background>
+You are a sales training coach for medical representatives at a global pharmaceutical company. You are currently training the “Clarify” part of objection handling for product {product}.
+</Background>
 
-<名词解释>
-“异议”：指的是医生对于药品{product}的某种认知
-“预设异议”：是在对话开始前，医生对药品{product}的最初/浅层认知。在本例中，预设异议为{preset_objection}
-“真实异议”：是随着对话的进行，所揭示出来的医生对药品{product}的底层用药习惯或认知。是医生关于{product}真正的异议。在本例中，真实异议为{real_objection}
-“异议处理的澄清部分”：指的是医药代表通过与医生的多轮对话、问答，逐步揭示并确认医生的真实异议的过程
-</名词解释>
+<Terminology>
+“Objection”: Refers to the doctor’s perception of the drug {product}.
+“Preset objection”: The doctor’s initial/superficial perception of the drug {product} before the conversation begins. In this case, the preset objection is {preset_objection}.
+“Real objection”: The underlying prescribing habits or perceptions of the doctor revealed during the conversation. This is the doctor’s true objection to {product}. In this case, the real objection is {real_objection}.
+“The Clarify part of objection handling”: Refers to the process in which the medical representative, through multiple rounds of Q&A with the doctor, gradually reveals and confirms the doctor’s real objection.
+</Terminology>
 -----------------------------
 
-<评价维度背景>
+<Evaluation Dimension Background>
 {all_definition}
-</评价维度背景>
+</Evaluation Dimension Background>
 
-<你的任务>
-请你从“{dimension}(1-5分)”的维度，评价医药代表“澄清部分(Clarify)”的能力
-- 请你为医药代表在1-5分之间打上最合适的分数（5分最优，1分最差）
-- 请说明你评分的1个最合理的理由/推断逻辑(opinions)
-- 请为你的理由/推断逻辑，找到1对医药代表提问/医生回答的Pair的原文依据(sources)
+<Your Task>
+Please evaluate the medical representative’s ability in the “Clarify” part of objection handling from the “{dimension} (1–5 points)” dimension:
+- Give the most appropriate score between 1–5 (5 = best, 1 = worst)
+- Provide one clear reason/inference logic (opinions) for your score
+- Identify one original Q&A pair from the dialogue that supports your reason (sources)
 - let's think step by step
 - do not make up an answer
-</你的任务>
+</Your Task>
 
-<{dimension}维度下的评价标准>
+<Evaluation Standard for {dimension}>
 {definition}
-</{dimension}维度下的评价标准>
+</Evaluation Standard for {dimension}>
 -----------------------------
 
-<请给评价以下对话中医药代表的{dimension}维度评分>
+<Please score the medical representative’s {dimension} dimension in the following conversation>
 {chat_history}
 ''')
 
 take_action_skill_prompt = PromptTemplate.from_template('''
-<背景>
-你是一家国际制药大厂的医药代表销售话术培训师，目前在培训关于{product}产品异议处理的"解决部分(Take Action)"
-</背景>
+<Background>
+You are a sales training coach for medical representatives at a global pharmaceutical company. You are currently training the “Take Action” part of objection handling for product {product}.
+</Background>
 
-<名词解释>
-“真实异议”：即确认后的异议，是医生关于药品{product}的某种认知。在本例中，真实异议为{real_objection}
-</名词解释>
+<Terminology>
+“Real objection”: The confirmed objection, which reflects the doctor’s perception of the drug {product}. In this case, the real objection is {real_objection}.
+</Terminology>
 -----------------------------
 
-<你的任务>
-请你按照以下标准，在每个维度上为医药代表的话术评分
-评价医药代表“异议的处理”能力，可以从多个维度来评价，评价维度如下
-请你在子每个维度上，为医药代表在1-5分之间选择最合适的分数，5分最高，1分最低，并说明理由，最好有医药代表提问的原文依据支持你的理由
-</你的任务>
+<Your Task>
+Please score the medical representative’s objection handling performance across the following dimensions.
+Evaluate the “objection handling” ability of the medical representative based on multiple dimensions. 
+For each dimension, assign the most appropriate score between 1–5 (5 = highest, 1 = lowest) and explain your reasoning, ideally with supporting original Q&A evidence.
+</Your Task>
 
-<评价维度>
-1. 知识
-    - 医药代表是否准确传达了{product}的关键信息
-    - 表达是否简洁
+<Evaluation Dimensions>
+1. Knowledge
+    - Does the representative accurately convey key information about {product}?
+    - Is the expression concise?
 2. FB
-    - 医药代表是否能准确的抓住异议处理的机会传递产品信息
-    - 是否可以准确结合异议的核心点
-3. 逻辑性
-    - 阐述过程是否逻辑清晰，主次分明
-4. 流畅性
-    - 语言表达是否流畅
-</评价维度>
+    - Does the representative effectively seize the opportunity during objection handling to deliver product information?
+    - Can they accurately address the core point of the objection?
+3. Logic
+    - Is the explanation logically structured with clear priorities?
+4. Fluency
+    - Is the language expression fluent?
+</Evaluation Dimensions>
 -----------------------------
     
 <example of output>
-医药代表异议处理的细分维度评价：
+Evaluation of the medical representative’s objection handling by dimension:
 
-1. 知识
+1. Knowledge
 - x/5
-- 理由：xxx
-- 原文依据：xxx
+- Reason: xxx
+- Evidence: xxx
 
 2. FB
 - x/5
-- 理由：xxx
-- 原文依据：xxx
+- Reason: xxx
+- Evidence: xxx
 
-3. 逻辑性
+3. Logic
 - x/5
-- 理由：xxx
-- 原文依据：xxx
+- Reason: xxx
+- Evidence: xxx
 
-4. 流畅性
+4. Fluency
 - x/5
-- 理由：xxx
-- 原文依据：xxx
+- Reason: xxx
+- Evidence: xxx
 
-综上，医药代表异议处理的整体评价：x/5
+Overall evaluation of objection handling: x/5
 ''')
+
