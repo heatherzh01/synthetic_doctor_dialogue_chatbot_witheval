@@ -1,0 +1,42 @@
+objection:
+  id: 2
+  version: '20240425'
+  preset_objection: "患者目前的降糖方案复杂，再加用诺和泰，调整起来很麻烦"
+  real_objection:
+    -
+      name: "不知道如何调整原来的降糖方案"
+      clarify_type: "疗效性"
+      take_action_type: "误解型"
+      visible_extra_info: ""
+      invisible_extra_info: "todo"
+      standard_answer:
+        - "todo1"
+        - "todo2"
+  hcp_space:
+    hcp_name: "随机姓名"
+    hcp_dept:
+      - "心内科"
+      - "内分泌科"
+      - "肾内科"
+    hcp_scene:
+      - "门诊"
+      - "病房"
+    hcp_type:
+      - "PCI医生"
+      - "非PCI医生"
+    hcp_patients:
+      - "冠心病合并2型糖尿病患者，高血压"
+      - "高血脂合并超重患者"
+      - "肥胖的2型糖尿病患者"
+    hcp_opinion:
+      - "关注血糖管理，关注疗效，关注方便性，关注依从性，关注安全性"
+    hcp_knowledge_stage:
+      - "未尝试处方"
+      - "尝试处方"
+    hcp_personality:
+      - "严厉型"
+      - "友善型"
+  clinic_cases:
+    - "甲，75岁的2型糖尿病患者，合并肥胖（BMI>25)，血糖不达标（HbA1c>7%）,合并CVD高风险(高血压，高脂血症，合并ASCVD）。在使用诺和泰两周后糖化降至7.5%"
+    - "乙，一位60岁的2型糖尿病患者，有冠心病和高血压，血糖高于 8.5%。在使用口服药没有效果后，使用诺和泰一个月了，血糖得到了控制。"
+    - "丙，一位20岁的2型糖尿病患者，没有其他疾病，血糖高于8%。在使用口服药没有效果后，使用诺和泰三天，暂时未见明显效果。"
